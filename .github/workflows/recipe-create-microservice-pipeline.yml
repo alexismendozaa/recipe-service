@@ -55,8 +55,8 @@ jobs:
             # Pull del nuevo contenedor desde DockerHub
             docker pull ${{ secrets.DOCKER_USERNAME }}/recipe-create-microservice:latest
 
-            # Ejecutar el contenedor en el puerto 4003
-            docker run -d -p 4003:4003 --name recipe-create-microservice \
+            # Ejecutar el contenedor en el puerto 6000
+            docker run -d -p 6000:6000 --name recipe-create-microservice \
               -e DB_RECIPES_HOST=${{ secrets.DB_RECIPES_HOST }} \
               -e DB_RECIPES_USER=${{ secrets.DB_RECIPES_USER }} \
               -e DB_RECIPES_PASS=${{ secrets.DB_RECIPES_PASS }} \
@@ -68,5 +68,5 @@ jobs:
               -e DB_SSL_MODE=require \
               ${{ secrets.DOCKER_USERNAME }}/recipe-create-microservice:latest
 
-            echo "Despliegue completo. El contenedor está en ejecución en el puerto 4003."
+            echo "Despliegue completo. El contenedor está en ejecución en el puerto 6000."
           EOF
