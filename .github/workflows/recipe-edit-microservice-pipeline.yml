@@ -26,8 +26,11 @@ jobs:
 
       - name: Build and push Docker image for recipe-edit-microservice
         run: |
+          set -e  # Detiene la ejecución si hay un error
           cd recipe-edit-microservice
+          echo "Construyendo imagen Docker..."
           docker build -t ${{ secrets.DOCKER_USERNAME }}/recipe-edit-microservice .
+          echo "Subiendo imagen a DockerHub..."
           docker push ${{ secrets.DOCKER_USERNAME }}/recipe-edit-microservice:latest
 
       - name: Set up SSH key for deployment
@@ -39,12 +42,21 @@ jobs:
 
       - name: Test SSH Connection
         run: |
+          echo "Verificando conexión SSH a EC2..."
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST_RECIPE_EDIT }} "echo 'SSH Connection Successful'"
 
       - name: SSH to EC2 and deploy
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST_RECIPE_EDIT }} << 'EOF'
+            set -e  # Detiene la ejecución si hay un error
             echo "Conexión SSH establecida. Iniciando despliegue..."
+
+            # Verificar si Docker está instalado en EC2
+            if ! command -v docker &> /dev/null
+            then
+                echo "ERROR: Docker no está instalado en la instancia EC2."
+                exit 1
+            fi
 
             # Detener y eliminar el contenedor anterior si existe
             echo "Deteniendo y eliminando contenedor existente..."
@@ -53,7 +65,7 @@ jobs:
 
             # Descargar la última imagen desde DockerHub
             echo "Descargando nueva imagen desde DockerHub..."
-            docker pull ${{ secrets.DOCKER_USERNAME }}/recipe-edit-microservice:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/recipe-edit-microservice:latest || { echo "ERROR: No se pudo descargar la imagen."; exit 1; }
 
             # Eliminar imágenes antiguas para liberar espacio
             docker image prune -f
@@ -67,5 +79,12 @@ jobs:
               -e DB_RECIPES_PASS=${{ secrets.DB_RECIPES_PASS }} \
               ${{ secrets.DOCKER_USERNAME }}/recipe-edit-microservice:latest
 
+            # Verificar que el contenedor esté corriendo
+            sleep 5  # Esperar unos segundos para que el contenedor arranque
+            if ! docker ps | grep -q recipe-edit-microservice; then
+              echo "ERROR: El contenedor no está en ejecución."
+              exit 1
+            fi
+
             echo "Despliegue completado exitosamente."
-          EOF 
+          EOF
