@@ -30,16 +30,42 @@ jobs:
           docker build -t ${{ secrets.DOCKER_USERNAME }}/recipe-edit-microservice .
           docker push ${{ secrets.DOCKER_USERNAME }}/recipe-edit-microservice:latest
 
+      - name: Set up SSH key for deployment
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST_RECIPE_EDIT }} >> ~/.ssh/known_hosts
+
+      - name: Test SSH Connection
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST_RECIPE_EDIT }} "echo 'SSH Connection Successful'"
+
       - name: SSH to EC2 and deploy
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST_RECIPE_EDIT }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST_RECIPE_EDIT }} << 'EOF'
+            echo "Conexión SSH establecida. Iniciando despliegue..."
+
+            # Detener y eliminar el contenedor anterior si existe
+            echo "Deteniendo y eliminando contenedor existente..."
             docker stop recipe-edit-microservice || true
             docker rm recipe-edit-microservice || true
+
+            # Descargar la última imagen desde DockerHub
+            echo "Descargando nueva imagen desde DockerHub..."
             docker pull ${{ secrets.DOCKER_USERNAME }}/recipe-edit-microservice:latest
-            docker run -d -p 6002:6002 --name recipe-edit-microservice \
+
+            # Eliminar imágenes antiguas para liberar espacio
+            docker image prune -f
+
+            # Ejecutar el nuevo contenedor
+            echo "Iniciando nuevo contenedor en el puerto 6002..."
+            docker run -d --restart=always -p 6002:6002 --name recipe-edit-microservice \
               -e DB_RECIPES_HOST=${{ secrets.DB_RECIPES_HOST }} \
               -e DB_RECIPES_NAME=${{ secrets.DB_RECIPES_NAME }} \
               -e DB_RECIPES_USER=${{ secrets.DB_RECIPES_USER }} \
               -e DB_RECIPES_PASS=${{ secrets.DB_RECIPES_PASS }} \
               ${{ secrets.DOCKER_USERNAME }}/recipe-edit-microservice:latest
+
+            echo "Despliegue completado exitosamente."
           EOF
