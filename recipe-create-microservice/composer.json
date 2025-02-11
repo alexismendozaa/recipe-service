@@ -1,0 +1,7 @@
+{
+    "name": "recipe-create-microservice",
+    "description": "Microservicio para crear recetas",
+    "require": {
+        "vlucas/phpdotenv": "^5.4"
+    }
+}
