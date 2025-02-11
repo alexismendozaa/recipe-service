@@ -1,7 +1,9 @@
 FROM php:8.1-apache
 
-# Instalar extensiones necesarias y Git
-RUN apt-get update && apt-get install -y git unzip && docker-php-ext-install mysqli
+# Instalar extensiones necesarias
+RUN apt-get update && apt-get install -y \
+    git unzip libpq-dev \
+    && docker-php-ext-install mysqli pdo_pgsql pgsql
 
 # Instalar Composer para manejar dependencias de PHP
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
