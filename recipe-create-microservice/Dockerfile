@@ -10,6 +10,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . /var/www/html/
 WORKDIR /var/www/html/
 
+# Cargar automáticamente las variables de entorno
+RUN echo "export \$(grep -v '^#' .env | xargs)" >> /root/.bashrc
+
 # Instalar dependencias con Composer
 RUN composer install --no-dev --optimize-autoloader
 
