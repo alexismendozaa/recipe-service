@@ -48,21 +48,6 @@ jobs:
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST_RECIPE_CREATE }} << 'EOF'
             echo "Iniciando despliegue en EC2..."
 
-            # Crear automáticamente el archivo .env con variables de entorno
-            echo "Creando archivo .env..."
-            cat > /home/ubuntu/.env_recipe_create <<EOL
-            DB_RECIPES_HOST=${{ secrets.DB_RECIPES_HOST }}
-            DB_RECIPES_NAME=${{ secrets.DB_RECIPES_NAME }}
-            DB_RECIPES_USER=${{ secrets.DB_RECIPES_USER }}
-            DB_RECIPES_PASS=${{ secrets.DB_RECIPES_PASS }}
-            DB_USERS_HOST=${{ secrets.DB_USERS_HOST }}
-            DB_USERS_NAME=${{ secrets.DB_USERS_NAME }}
-            DB_USERS_USER=${{ secrets.DB_USERS_USER }}
-            DB_USERS_PASS=${{ secrets.DB_USERS_PASS }}
-            DB_SSL_MODE=require
-            EOL
-            echo "Archivo .env creado correctamente."
-
             # Detener y eliminar contenedor anterior si existe
             docker stop recipe-create-microservice || true
             docker rm recipe-create-microservice || true
@@ -72,7 +57,15 @@ jobs:
 
             # Ejecutar el contenedor en el puerto 6000 con variables de entorno
             docker run -d -p 6000:6000 --name recipe-create-microservice \
-              --env-file /home/ubuntu/.env_recipe_create \
+              -e DB_RECIPES_HOST=${{ secrets.DB_RECIPES_HOST }} \
+              -e DB_RECIPES_NAME=${{ secrets.DB_RECIPES_NAME }} \
+              -e DB_RECIPES_USER=${{ secrets.DB_RECIPES_USER }} \
+              -e DB_RECIPES_PASS=${{ secrets.DB_RECIPES_PASS }} \
+              -e DB_USERS_HOST=${{ secrets.DB_USERS_HOST }} \
+              -e DB_USERS_NAME=${{ secrets.DB_USERS_NAME }} \
+              -e DB_USERS_USER=${{ secrets.DB_USERS_USER }} \
+              -e DB_USERS_PASS=${{ secrets.DB_USERS_PASS }} \
+              -e DB_SSL_MODE=require \
               ${{ secrets.DOCKER_USERNAME }}/recipe-create-microservice:latest
 
             echo "Despliegue completo. El contenedor está en ejecución en el puerto 6000."

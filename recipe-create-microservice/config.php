@@ -1,14 +1,9 @@
 <?php
 
 // Cargar dotenv si existe
-if (file_exists(__DIR__ . '/../.env')) {
-    $lines = file(__DIR__ . '/../.env');
-    foreach ($lines as $line) {
-        if (trim($line) !== '' && strpos($line, '=') !== false) {
-            putenv(trim($line));
-        }
-    }
-}
+require_once __DIR__ . '/../vendor/autoload.php';
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
 
 // Verificar si las variables existen, si no, mostrar un error claro
 function getEnvOrDie($key) {
