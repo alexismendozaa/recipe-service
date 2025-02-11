@@ -12,7 +12,7 @@ class CreateRecipeController {
         $usersDb = $dbService->getUsersConnection();
         
         // Verificar si el usuario existe en la base de datos de usuarios
-        $query = "SELECT id FROM users WHERE id = $1";
+        $query = "SELECT id FROM "Users" WHERE id = $1";
         $result = pg_query_params($usersDb, $query, [$data['user_id']]);
 
         if (pg_num_rows($result) === 0) {
