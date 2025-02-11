@@ -10,9 +10,6 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 COPY . /var/www/html/
 WORKDIR /var/www/html/
 
-# Copiar el archivo .env al contenedor
-COPY recipe-create-microservice/.env /var/www/html/.env
-
 # Instalar dependencias con Composer
 RUN composer install --no-dev --optimize-autoloader
 
