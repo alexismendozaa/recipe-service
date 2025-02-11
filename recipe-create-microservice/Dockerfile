@@ -11,7 +11,7 @@ COPY . /var/www/html/
 WORKDIR /var/www/html/
 
 # Instalar dependencias con Composer
-RUN composer install --no-dev --optimize-autoloader
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 # Exponer el puerto 6000
 EXPOSE 6000

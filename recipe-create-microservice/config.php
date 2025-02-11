@@ -1,9 +1,11 @@
 <?php
 
-// Cargar dotenv si existe
-require_once __DIR__ . '/../vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
-$dotenv->load();
+// Asegurar que `autoload.php` se carga correctamente
+$autoloadPath = __DIR__ . '/vendor/autoload.php';
+if (!file_exists($autoloadPath)) {
+    die("ERROR: No se encontró vendor/autoload.php. Asegúrate de ejecutar 'composer install'.");
+}
+require_once $autoloadPath;
 
 // Verificar si las variables existen, si no, mostrar un error claro
 function getEnvOrDie($key) {
