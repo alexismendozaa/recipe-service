@@ -1,0 +1,11 @@
+{
+    "name": "recipe-list-microservice",
+    "require": {
+        "vlucas/phpdotenv": "^5.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}
