@@ -70,13 +70,23 @@ jobs:
             # Eliminar imágenes antiguas para liberar espacio
             docker image prune -f
 
-            # Ejecutar el nuevo contenedor
+            # Imprimir las variables de entorno antes de ejecutar el contenedor
+            echo "Verificando variables de entorno..."
+            echo "DB_RECIPES_HOST: ${{ secrets.DB_RECIPES_HOST }}"
+            echo "DB_USERS_HOST: ${{ secrets.DB_USERS_HOST }}"
+
+            # Ejecutar el nuevo contenedor con TODAS las variables de entorno necesarias
             echo "Iniciando nuevo contenedor en el puerto 6002..."
             docker run -d --restart=always -p 6002:6002 --name recipe-edit-microservice \
               -e DB_RECIPES_HOST=${{ secrets.DB_RECIPES_HOST }} \
               -e DB_RECIPES_NAME=${{ secrets.DB_RECIPES_NAME }} \
               -e DB_RECIPES_USER=${{ secrets.DB_RECIPES_USER }} \
               -e DB_RECIPES_PASS=${{ secrets.DB_RECIPES_PASS }} \
+              -e DB_USERS_HOST=${{ secrets.DB_USERS_HOST }} \
+              -e DB_USERS_NAME=${{ secrets.DB_USERS_NAME }} \
+              -e DB_USERS_USER=${{ secrets.DB_USERS_USER }} \
+              -e DB_USERS_PASS=${{ secrets.DB_USERS_PASS }} \
+              -e DB_SSL_MODE=require \
               ${{ secrets.DOCKER_USERNAME }}/recipe-edit-microservice:latest
 
             # Verificar que el contenedor esté corriendo

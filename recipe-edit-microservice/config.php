@@ -7,7 +7,7 @@ if (!file_exists($autoloadPath)) {
 }
 require_once $autoloadPath;
 
-// Verificar si las variables existen, si no, mostrar un error claro
+// Función para obtener variables de entorno o lanzar error
 function getEnvOrDie($key) {
     $value = getenv($key);
     if (!$value) {
@@ -17,12 +17,14 @@ function getEnvOrDie($key) {
 }
 
 return [
+    // Base de datos de recetas (MySQL en RDS)
     'db_recipes_host' => getEnvOrDie('DB_RECIPES_HOST'),
     'db_recipes_name' => getEnvOrDie('DB_RECIPES_NAME'),
     'db_recipes_user' => getEnvOrDie('DB_RECIPES_USER'),
     'db_recipes_pass' => getEnvOrDie('DB_RECIPES_PASS'),
     'db_recipes_ssl' => true,
 
+    // Base de datos de usuarios (PostgreSQL en RDS)
     'db_users_host' => getEnvOrDie('DB_USERS_HOST'),
     'db_users_name' => getEnvOrDie('DB_USERS_NAME'),
     'db_users_user' => getEnvOrDie('DB_USERS_USER'),
