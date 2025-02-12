@@ -7,13 +7,15 @@ if (!file_exists($autoloadPath)) {
 }
 require_once $autoloadPath;
 
-// Función para obtener variables de entorno o lanzar error
-function getEnvOrDie($key) {
-    $value = getenv($key);
-    if (!$value) {
-        die("ERROR: La variable de entorno $key no está definida.");
+// Verificar si la función ya está declarada antes de definirla
+if (!function_exists('getEnvOrDie')) {
+    function getEnvOrDie($key) {
+        $value = getenv($key);
+        if (!$value) {
+            die("ERROR: La variable de entorno $key no está definida.");
+        }
+        return $value;
     }
-    return $value;
 }
 
 return [
