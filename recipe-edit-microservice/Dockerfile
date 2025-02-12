@@ -18,5 +18,5 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 # Exponer el puerto 6002
 EXPOSE 6002
 
-# Comando de ejecución
-CMD ["php", "-S", "0.0.0.0:6002", "-t", "."]
+# Configurar PHP para redirigir todas las rutas a index.php
+CMD ["php", "-S", "0.0.0.0:6002", "-t", ".", "index.php"]
