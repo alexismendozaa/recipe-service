@@ -1,5 +1,6 @@
 {
-    "name": "recipe-list-microservice",
+    "name": "recipe/list-microservice",
+    "description": "Microservicio para listar recetas",
     "require": {
         "vlucas/phpdotenv": "^5.4"
     },
