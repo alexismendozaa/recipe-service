@@ -1,0 +1,12 @@
+{
+    "name": "recipe/delete-microservice",
+    "description": "Microservicio para eliminar recetas",
+    "require": {
+        "vlucas/phpdotenv": "^5.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}
