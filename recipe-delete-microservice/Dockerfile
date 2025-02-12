@@ -11,6 +11,6 @@ WORKDIR /var/www/html/
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-EXPOSE 6001
+EXPOSE 6004
 
-CMD ["php", "-S", "0.0.0.0:6001", "-t", ".", "index.php"]
+CMD ["php", "-S", "0.0.0.0:6003", "-t", ".", "index.php"]

@@ -1,0 +1,95 @@
+name: Deploy Recipe Delete Microservice
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'recipe-delete-microservice/**'
+
+jobs:
+  deploy-recipe-delete:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push Docker image for recipe-delete-microservice
+        run: |
+          set -e  # Detiene la ejecución si hay un error
+          cd recipe-delete-microservice
+          echo "Construyendo imagen Docker..."
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/recipe-delete-microservice .
+          echo "Subiendo imagen a DockerHub..."
+          docker push ${{ secrets.DOCKER_USERNAME }}/recipe-delete-microservice:latest
+
+      - name: Set up SSH key for deployment
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_PRIVATE_KEY2 }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST_RECIPE_DELETE }} >> ~/.ssh/known_hosts
+
+      - name: Test SSH Connection
+        run: |
+          echo "Verificando conexión SSH a EC2..."
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST_RECIPE_DELETE }} "echo 'SSH Connection Successful'"
+
+      - name: SSH to EC2 and deploy
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ secrets.EC2_HOST_RECIPE_DELETE }} << 'EOF'
+            set -e  # Detiene la ejecución si hay un error
+            echo "Conexión SSH establecida. Iniciando despliegue..."
+
+            # Verificar si Docker está instalado en EC2
+            if ! command -v docker &> /dev/null
+            then
+                echo "ERROR: Docker no está instalado en la instancia EC2."
+                exit 1
+            fi
+
+            # Detener y eliminar el contenedor anterior si existe
+            echo "Deteniendo y eliminando contenedor existente..."
+            docker stop recipe-delete-microservice || true
+            docker rm recipe-delete-microservice || true
+
+            # Descargar la última imagen desde DockerHub
+            echo "Descargando nueva imagen desde DockerHub..."
+            docker pull ${{ secrets.DOCKER_USERNAME }}/recipe-delete-microservice:latest || { echo "ERROR: No se pudo descargar la imagen."; exit 1; }
+
+            # Eliminar imágenes antiguas para liberar espacio
+            docker image prune -f
+
+            # Imprimir las variables de entorno antes de ejecutar el contenedor
+            echo "Verificando variables de entorno..."
+            echo "DB_RECIPES_HOST: ${{ secrets.DB_RECIPES_HOST }}"
+
+            # Ejecutar el nuevo contenedor con TODAS las variables de entorno necesarias
+            echo "Iniciando nuevo contenedor en el puerto 6003..."
+            docker run -d --restart=always -p 6003:6003 --name recipe-delete-microservice \
+              -e DB_RECIPES_HOST=${{ secrets.DB_RECIPES_HOST }} \
+              -e DB_RECIPES_NAME=${{ secrets.DB_RECIPES_NAME }} \
+              -e DB_RECIPES_USER=${{ secrets.DB_RECIPES_USER }} \
+              -e DB_RECIPES_PASS=${{ secrets.DB_RECIPES_PASS }} \
+              -e DB_SSL_MODE=require \
+              ${{ secrets.DOCKER_USERNAME }}/recipe-delete-microservice:latest
+
+            # Verificar que el contenedor esté corriendo
+            sleep 5  # Esperar unos segundos para que el contenedor arranque
+            if ! docker ps | grep -q recipe-delete-microservice; then
+              echo "ERROR: El contenedor no está en ejecución."
+              exit 1
+            fi
+
+            echo "Despliegue completado exitosamente."
+          EOF
